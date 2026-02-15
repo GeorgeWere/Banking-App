@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Account Statements - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-file-invoice me-2"></i>Account Statements</h2>
+            <p class="text-muted">Select an account to generate a statement</p>
+        </div>
+    </div>
+    
+    <!-- Account Selection -->
+    <div class="row">
+        {% if accounts %}
+            {% for account in accounts %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">{{ account.account_type|title }} Account</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-university fa-3x text-primary mb-2"></i>
+                            <h6 class="font-monospace">{{ account.account_number }}</h6>
+                            <h4 class="text-primary">${{ "%.2f"|format(account.balance) }}</h4>
+                            <p class="text-muted mb-0">Available: ${{ "%.2f"|format(account.available_balance) }}</p>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">Select Statement Period:</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('customer.generate_statement', account_id=account.account_id, months=1) }}" 
+                               class="btn btn-outline-primary text-start">
+                                <i class="fas fa-file-pdf me-2"></i>Last 1 Month
+                            </a>
+                            <a href="{{ url_for('customer.generate_statement', account_id=account.account_id, months=3) }}" 
+                               class="btn btn-outline-primary text-start">
+                                <i class="fas fa-file-pdf me-2"></i>Last 3 Months
+                            </a>
+                            <a href="{{ url_for('customer.generate_statement', account_id=account.account_id, months=6) }}" 
+                               class="btn btn-outline-primary text-start">
+                                <i class="fas fa-file-pdf me-2"></i>Last 6 Months
+                            </a>
+                            <a href="{{ url_for('customer.generate_statement', account_id=account.account_id, months=12) }}" 
+                               class="btn btn-outline-primary text-start">
+                                <i class="fas fa-file-pdf me-2"></i>Last 12 Months
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Opened: {{ account.opened_date }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h4>No Accounts Found</h4>
+                    <p class="mb-0">You don't have any accounts to generate statements for.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

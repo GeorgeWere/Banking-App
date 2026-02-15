@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-history me-2"></i>Transaction History</h2>
+            <p class="text-muted">View and filter all your financial transactions</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary" onclick="exportTransactions()">
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form id="filterForm" onsubmit="return false;">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label for="accountFilter" class="form-label">Account</label>
+                        <select class="form-select" id="accountFilter">
+                            <option value="all">All Accounts</option>
+                            {% for account in accounts %}
+                                <option value="{{ account.account_id }}">{{ account.account_type|title }} - {{ account.account_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 mb-2">
+                        <label for="typeFilter" class="form-label">Transaction Type</label>
+                        <select class="form-select" id="typeFilter">
+                            <option value="all">All Types</option>
+                            <option value="transfer">Transfer</option>
+                            <option value="deposit">Deposit</option>
+                            <option value="withdrawal">Withdrawal</option>
+                            <option value="payment">Payment</option>
+                            <option value="fee">Fee</option>
+                            <option value="interest">Interest</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 mb-2">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                            <option value="reversed">Reversed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3 mb-2">
+                        <label for="dateRange" class="form-label">Date Range</label>
+                        <select class="form-select" id="dateRange">
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="180">Last 6 Months</option>
+                            <option value="365">Last Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="applyFilters()">
+                            <i class="fas fa-filter me-2"></i>Apply
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Credits</h6>
+                    <h3 class="mb-0">${{ "%.2f"|format(total_credits or 0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Debits</h6>
+                    <h3 class="mb-0">${{ "%.2f"|format(total_debits or 0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Transactions</h6>
+                    <h3 class="mb-0">{{ transactions|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Pending</h6>
+                    <h3 class="mb-0">{{ pending_count or 0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transactions Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Transaction ID</th>
+                            <th>Description</th>
+                            <th>From Account</th>
+                            <th>To Account</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for txn in transactions %}
+                            <tr class="transaction-row" data-transaction-id="{{ txn.transaction_uid }}">
+                                <td>{{ txn.initiated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <small class="text-muted">{{ txn.transaction_uid[:8] }}...</small>
+                                </td>
+                                <td>{{ txn.description or txn.transaction_type|title }}</td>
+                                <td>{{ txn.from_account_number or 'N/A' }}</td>
+                                <td>{{ txn.to_account_number or 'N/A' }}</td>
+                                <td class="{% if txn.from_account_id in accounts|map(attribute='account_id') %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                    {% if txn.from_account_id in accounts|map(attribute='account_id') %}
+                                        -${{ "%.2f"|format(txn.amount) }}
+                                    {% else %}
+                                        +${{ "%.2f"|format(txn.amount) }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if txn.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif txn.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif txn.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ txn.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewTransaction('{{ txn.transaction_uid }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="downloadReceipt('{{ txn.transaction_uid }}')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No transactions found</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+                <nav aria-label="Transaction pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                            <a class="page-link" href="?page={{ page-1 }}">Previous</a>
+                        </li>
+                        {% for p in range(1, total_pages + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                            <a class="page-link" href="?page={{ page+1 }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionDetails">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+let transactionsData = {{ transactions|tojson|safe }};
+
+function applyFilters() {
+    const account = document.getElementById('accountFilter').value;
+    const type = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const dateRange = document.getElementById('dateRange').value;
+    
+    console.log('Filters applied:', {account, type, status, dateRange});
+    // In real app, this would trigger an AJAX call to reload the table
+    alert('Filters applied! (Demo - refresh page to see filtered results)');
+}
+
+function viewTransaction(transactionId) {
+    const txn = transactionsData.find(t => t.transaction_uid === transactionId);
+    if (!txn) return;
+    
+    const modalBody = document.getElementById('transactionDetails');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Transaction Information</h6>
+                <table class="table table-sm">
+                    <tr><th>ID:</th><td>${txn.transaction_uid}</td></tr>
+                    <tr><th>Date:</th><td>${new Date(txn.initiated_at).toLocaleString()}</td></tr>
+                    <tr><th>Type:</th><td>${txn.transaction_type}</td></tr>
+                    <tr><th>Status:</th><td><span class="badge bg-${txn.status === 'completed' ? 'success' : txn.status === 'pending' ? 'warning' : 'danger'}">${txn.status}</span></td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Amount Details</h6>
+                <table class="table table-sm">
+                    <tr><th>Amount:</th><td class="fw-bold">$${txn.amount.toFixed(2)}</td></tr>
+                    <tr><th>Description:</th><td>${txn.description || 'N/A'}</td></tr>
+                </table>
+            </div>
+            <div class="col-12 mt-3">
+                <h6>Account Details</h6>
+                <table class="table table-sm">
+                    <tr><th>From Account:</th><td>${txn.from_account_number || 'N/A'}</td></tr>
+                    <tr><th>To Account:</th><td>${txn.to_account_number || 'N/A'}</td></tr>
+                    <tr><th>IP Address:</th><td>${txn.ip_address || 'N/A'}</td></tr>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('transactionModal')).show();
+}
+
+function downloadReceipt(transactionId) {
+    alert('Downloading receipt for transaction: ' + transactionId);
+}
+
+function exportTransactions() {
+    alert('Exporting transactions as CSV...');
+}
+
+// Search functionality
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        // Focus on filter or implement search
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

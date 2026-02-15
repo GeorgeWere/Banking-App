@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Account Statement - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header with Print Button -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-file-invoice me-2"></i>Account Statement</h2>
+        </div>
+        <div class="col-auto">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print me-2"></i>Print Statement
+            </button>
+            <a href="{{ url_for('customer.statements') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Statements
+            </a>
+        </div>
+    </div>
+    
+    <!-- Bank Header -->
+    <div class="row mb-4">
+        <div class="col-6">
+            <h3 class="text-primary">SecureBank</h3>
+            <p class="mb-0">123 Banking Avenue</p>
+            <p>Financial District, NY 10001</p>
+            <p class="mb-0">support@securebank.com</p>
+            <p>1-800-SECUREBANK</p>
+        </div>
+        <div class="col-6 text-end">
+            <h5>Account Statement</h5>
+            <p class="mb-0"><strong>Period:</strong> {{ start_date }} to {{ end_date }}</p>
+            <p><strong>Generated:</strong> <span id="current-date"></span></p>
+        </div>
+    </div>
+    
+    <!-- Account Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Account Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>Account Holder:</strong><br>
+                    {{ account.first_name }} {{ account.last_name }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Account Number:</strong><br>
+                    <span class="font-monospace">{{ account.account_number }}</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Account Type:</strong><br>
+                    <span class="badge bg-info">{{ account.account_type|title }}</span>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <strong>Email:</strong><br>
+                    {{ account.email }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Opened Date:</strong><br>
+                    {{ account.opened_date }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Currency:</strong><br>
+                    {{ account.currency|default('USD') }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Opening Balance</h6>
+                    <h3 class="mb-0 text-primary">${{ "%.2f"|format(opening_balance) }}</h3>
+                    <small class="text-muted">as of {{ start_date }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Credits</h6>
+                    <h3 class="mb-0 text-success">+${{ "%.2f"|format(total_credits) }}</h3>
+                    <small class="text-muted">{{ months }} month period</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Debits</h6>
+                    <h3 class="mb-0 text-danger">-${{ "%.2f"|format(total_debits) }}</h3>
+                    <small class="text-muted">{{ months }} month period</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Closing Balance</h6>
+                    <h3 class="mb-0 text-primary">${{ "%.2f"|format(closing_balance) }}</h3>
+                    <small class="text-muted">as of {{ end_date }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Transaction History</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Reference</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th class="text-end">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if transactions %}
+                            {% for txn in transactions %}
+                            <tr>
+                                <td>{{ txn.initiated_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {{ txn.description or txn.transaction_type|title }}
+                                    {% if txn.from_account_id == account.account_id and txn.to_account_id %}
+                                        <br><small class="text-muted">To: {{ txn.to_account_number }}</small>
+                                    {% elif txn.to_account_id == account.account_id and txn.from_account_id %}
+                                        <br><small class="text-muted">From: {{ txn.from_account_number }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="font-monospace">{{ txn.transaction_uid[:12] }}...</small>
+                                </td>
+                                <td class="text-danger">
+                                    {% if txn.from_account_id == account.account_id %}
+                                        ${{ "%.2f"|format(txn.amount) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-success">
+                                    {% if txn.to_account_id == account.account_id %}
+                                        ${{ "%.2f"|format(txn.amount) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-end fw-bold">${{ "%.2f"|format(txn.running_balance) }}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Opening Balance Row -->
+                            <tr class="table-secondary">
+                                <td colspan="5" class="text-end fw-bold">Opening Balance:</td>
+                                <td class="text-end fw-bold">${{ "%.2f"|format(opening_balance) }}</td>
+                            </tr>
+                            
+                            <!-- Closing Balance Row -->
+                            <tr class="table-primary">
+                                <td colspan="5" class="text-end fw-bold">Closing Balance:</td>
+                                <td class="text-end fw-bold">${{ "%.2f"|format(closing_balance) }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No Transactions Found</h5>
+                                    <p class="text-muted">No transactions occurred during this period.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transaction Summary -->
+    {% if transactions %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Transaction Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Total Transactions:</small>
+                            <h6>{{ transactions|length }}</h6>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Average Transaction:</small>
+                            <h6>${{ "%.2f"|format((total_credits + total_debits) / transactions|length if transactions else 0) }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Important Information</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-circle fa-2xs text-primary me-2"></i>This statement covers {{ months }} month(s)</li>
+                        <li><i class="fas fa-circle fa-2xs text-primary me-2"></i>All amounts are in USD</li>
+                        <li><i class="fas fa-circle fa-2xs text-primary me-2"></i>Please report any discrepancies within 30 days</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="text-center text-muted mt-4 pt-3 border-top">
+        <small>
+            <i class="fas fa-certificate me-1"></i>
+            This is a system-generated statement. For queries, contact customer support.<br>
+            SecureBank - Member FDIC. Equal Housing Lender.
+        </small>
+    </div>
+</div>
+
+<!-- JavaScript to set current date without using now() -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var today = new Date();
+        var options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', options);
+    });
+</script>
+
+<!-- Print Styles -->
+<style media="print">
+    @page {
+        size: auto;
+        margin: 0.5in;
+    }
+    
+    body {
+        background-color: white;
+        font-size: 10pt;
+    }
+    
+    .navbar, .footer, .btn, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: black !important;
+        border-bottom: 1px solid #ddd !important;
+    }
+    
+    .table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+    
+    .table th, .table td {
+        border: 1px solid #ddd !important;
+        padding: 6px !important;
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f9f9f9 !important;
+    }
+    
+    .badge, .btn, .fas, .far {
+        display: none !important;
+    }
+    
+    h3.text-primary {
+        color: black !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    a {
+        text-decoration: none !important;
+        color: black !important;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+    
+    /* Ensure all text is black for printing */
+    .text-primary, .text-success, .text-danger, .text-muted {
+        color: black !important;
+    }
+    
+    /* Hide icons in print */
+    i, .fa, .fas, .far {
+        display: none !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Funds - SecureBank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .beneficiary-card {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .beneficiary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .beneficiary-card.selected {
+        border: 2px solid #0d6efd;
+        background-color: #f0f7ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Transfer Funds</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Beneficiaries Section -->
+                    {% if beneficiaries %}
+                        <h5 class="mb-3">Quick Transfer to Beneficiaries</h5>
+                        <div class="row mb-4">
+                            {% for ben in beneficiaries %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="card beneficiary-card" onclick="selectBeneficiary('{{ ben.account_number }}', '{{ ben.nickname or ben.beneficiary_name }}')">
+                                        <div class="card-body text-center p-3">
+                                            <i class="fas fa-user-circle fa-3x text-primary mb-2"></i>
+                                            <h6 class="mb-1">{{ ben.nickname or ben.beneficiary_name }}</h6>
+                                            <small class="text-muted">{{ ben.account_number }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <hr>
+                    {% endif %}
+                    
+                    <!-- Transfer Form -->
+                    <form method="POST" action="{{ url_for('transfer') }}" id="transferForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="from_account" class="form-label">From Account *</label>
+                                <select class="form-select" id="from_account" name="from_account" required>
+                                    <option value="">Select account</option>
+                                    {% for account in accounts %}
+                                        <option value="{{ account.account_id }}">
+                                            {{ account.account_type|title }} - {{ account.account_number }} 
+                                            (Balance: ${{ "%.2f"|format(account.balance) }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="to_account" class="form-label">To Account *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="to_account" name="to_account" 
+                                           placeholder="Enter account number" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="verifyAccount">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                                <div id="accountVerificationResult" class="mt-1"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   placeholder="e.g., Rent payment, Gift, etc.">
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Transfers are processed immediately. Please verify all details before confirming.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Transfer Now
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                    
+                    <!-- Add Beneficiary Form -->
+                    <hr class="my-4">
+                    <h5>Add New Beneficiary</h5>
+                    <form method="POST" action="{{ url_for('customer.add_beneficiary') }}" class="mt-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <input type="text" class="form-control" name="account_number" 
+                                       placeholder="Account Number" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <input type="text" class="form-control" name="nickname" 
+                                       placeholder="Nickname (Optional)">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Verify account number
+$('#verifyAccount').click(function() {
+    const accountNumber = $('#to_account').val();
+    if (!accountNumber) {
+        alert('Please enter an account number');
+        return;
+    }
+    
+    $.get(`/api/verify_account/${accountNumber}`, function(data) {
+        if (data.success) {
+            $('#accountVerificationResult').html(`
+                <div class="alert alert-success py-1">
+                    <i class="fas fa-check-circle me-1"></i>
+                    Valid account - ${data.holder_name}
+                </div>
+            `);
+        }
+    }).fail(function() {
+        $('#accountVerificationResult').html(`
+            <div class="alert alert-danger py-1">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                Account not found
+            </div>
+        `);
+    });
+});
+
+// Select beneficiary
+function selectBeneficiary(accountNumber, name) {
+    $('#to_account').val(accountNumber);
+    $('#verifyAccount').click();
+    
+    // Highlight selected
+    $('.beneficiary-card').removeClass('selected');
+    event.currentTarget.classList.add('selected');
+}
+
+// Form validation
+$('#transferForm').submit(function(e) {
+    const amount = parseFloat($('#amount').val());
+    const fromAccount = $('#from_account option:selected').text();
+    const balanceMatch = fromAccount.match(/Balance: \$([\d.]+)/);
+    
+    if (balanceMatch && amount > parseFloat(balanceMatch[1])) {
+        e.preventDefault();
+        alert('Insufficient funds for this transfer.');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

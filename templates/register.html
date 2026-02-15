@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Register - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create New Account</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                        <!-- Account Information -->
+                        <h5 class="mb-3">Account Information</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       required minlength="3" maxlength="50"
+                                       pattern="[a-zA-Z0-9_]+" 
+                                       title="Username can only contain letters, numbers, and underscores">
+                                <div class="form-text">3-50 characters, letters, numbers, and underscores only</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       required maxlength="100">
+                                <div class="form-text">We'll never share your email with anyone else</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           required minlength="6">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Minimum 6 characters</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirm_password" 
+                                       name="confirm_password" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Information -->
+                        <h5 class="mb-3">Personal Information</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       maxlength="50">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       maxlength="50">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="+1 234 567 8900">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="2"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Preferences -->
+                        <h5 class="mb-3">Account Preferences</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="account_type" class="form-label">Preferred Account Type</label>
+                                <select class="form-select" id="account_type" name="account_type">
+                                    <option value="savings">Savings Account</option>
+                                    <option value="checking">Checking Account</option>
+                                    <option value="both" selected>Both Savings & Checking</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="initial_deposit" class="form-label">Initial Deposit (Optional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="initial_deposit" 
+                                           name="initial_deposit" min="0" step="100" value="1000">
+                                </div>
+                                <div class="form-text">Minimum $1000 for account opening</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a> *
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="communications">
+                                <label class="form-check-label" for="communications">
+                                    I would like to receive marketing communications
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Strength Meter -->
+                        <div class="mb-4">
+                            <label>Password Strength:</label>
+                            <div class="progress" style="height: 5px;">
+                                <div id="passwordStrength" class="progress-bar" style="width: 0%;"></div>
+                            </div>
+                            <small id="passwordStrengthText" class="text-muted"></small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Account Terms</h6>
+                <p>By opening an account with SecureBank, you agree to comply with all applicable laws and regulations...</p>
+                <h6>2. Security</h6>
+                <p>You are responsible for maintaining the confidentiality of your account credentials...</p>
+                <h6>3. Transactions</h6>
+                <p>All transactions are subject to verification and may be delayed for security purposes...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Privacy Policy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Data Collection</h6>
+                <p>We collect personal information to provide and improve our services...</p>
+                <h6>Data Usage</h6>
+                <p>Your data is used to process transactions and improve user experience...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Password toggle
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const password = document.getElementById('password');
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    this.querySelector('i').classList.toggle('fa-eye');
+    this.querySelector('i').classList.toggle('fa-eye-slash');
+});
+
+// Password strength checker
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strengthBar = document.getElementById('passwordStrength');
+    const strengthText = document.getElementById('passwordStrengthText');
+    
+    let strength = 0;
+    if (password.match(/[a-z]+/)) strength++;
+    if (password.match(/[A-Z]+/)) strength++;
+    if (password.match(/[0-9]+/)) strength++;
+    if (password.match(/[$@#&!]+/)) strength++;
+    if (password.length > 7) strength++;
+    
+    const width = (strength / 5) * 100;
+    strengthBar.style.width = width + '%';
+    
+    if (strength <= 2) {
+        strengthBar.className = 'progress-bar bg-danger';
+        strengthText.textContent = 'Weak';
+    } else if (strength <= 4) {
+        strengthBar.className = 'progress-bar bg-warning';
+        strengthText.textContent = 'Medium';
+    } else {
+        strengthBar.className = 'progress-bar bg-success';
+        strengthText.textContent = 'Strong';
+    }
+});
+
+// Password confirmation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirm = this.value;
+    
+    if (password !== confirm) {
+        this.setCustomValidity('Passwords do not match');
+        this.style.borderColor = '#dc3545';
+    } else {
+        this.setCustomValidity('');
+        this.style.borderColor = '#198754';
+    }
+});
+
+// Username availability check (simulated)
+document.getElementById('username').addEventListener('blur', function() {
+    const username = this.value;
+    if (username.length >= 3) {
+        // Simulate AJAX call
+        console.log('Checking username availability for: ' + username);
+    }
+});
+
+// Form validation
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    const terms = document.getElementById('terms').checked;
+    
+    if (password !== confirm) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    if (!terms) {
+        e.preventDefault();
+        alert('You must agree to the Terms and Conditions');
+        return;
+    }
+    
+    // Disable button to prevent double submission
+    document.getElementById('registerBtn').disabled = true;
+    document.getElementById('registerBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-users me-2"></i>User Management</h2>
+            <p class="text-muted">Manage all bank customers and their accounts</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="exportUserData()">
+                <i class="fas fa-download me-2"></i>Export Data
+            </button>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Users</h6>
+                    <h3>{{ stats.total_users or 0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Active Users</h6>
+                    <h3>{{ stats.active_users or 0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Accounts</h6>
+                    <h3>{{ stats.total_accounts or 0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6>Total Balance</h6>
+                    <h3>${{ "%.2f"|format(stats.total_balance or 0) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form id="filterForm" onsubmit="return false;">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <input type="text" class="form-control" placeholder="Search by name, email, username" id="searchInput">
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <select class="form-select" id="roleFilter">
+                            <option value="all">All Roles</option>
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <select class="form-select" id="dateFilter">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-primary w-100" onclick="applyFilters()">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Contact</th>
+                            <th>Accounts</th>
+                            <th>Joined</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>#{{ user.user_id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" 
+                                             style="width: 40px; height: 40px; line-height: 40px; text-align: center; border-radius: 50%;">
+                                            {{ user.first_name[0] if user.first_name else user.username[0] | upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">@{{ user.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <i class="fas fa-envelope text-muted me-1"></i>{{ user.email }}<br>
+                                    <i class="fas fa-phone text-muted me-1"></i>{{ user.phone or 'N/A' }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ user.account_count }} accounts</span>
+                                    <br>
+                                    <small>Balance: ${{ "%.2f"|format(user.total_balance or 0) }}</small>
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">{{ user.role }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewUser({{ user.user_id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editUser({{ user.user_id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}" 
+                                                onclick="toggleUserStatus({{ user.user_id }}, {{ 'true' if user.is_active else 'false' }})">
+                                            <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userDetails">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="edit_first_name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="edit_last_name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit_email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="edit_phone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="edit_role">
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveUserChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+let usersData = {{ users|tojson|safe }};
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    const role = document.getElementById('roleFilter').value;
+    const date = document.getElementById('dateFilter').value;
+    
+    console.log('Filters applied:', {search, status, role, date});
+    // In production, this would trigger an AJAX call
+    alert('Filters applied! (Demo - refresh page to see filtered results)');
+}
+
+function viewUser(userId) {
+    const user = usersData.find(u => u.user_id === userId);
+    if (!user) return;
+    
+    const modalBody = document.getElementById('userDetails');
+    modalBody.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Personal Information</h6>
+                <table class="table table-sm">
+                    <tr><th>Name:</th><td>${user.first_name || ''} ${user.last_name || ''}</td></tr>
+                    <tr><th>Username:</th><td>${user.username}</td></tr>
+                    <tr><th>Email:</th><td>${user.email}</td></tr>
+                    <tr><th>Phone:</th><td>${user.phone || 'N/A'}</td></tr>
+                    <tr><th>Address:</th><td>${user.address || 'N/A'}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Account Information</h6>
+                <table class="table table-sm">
+                    <tr><th>Role:</th><td>${user.role}</td></tr>
+                    <tr><th>Status:</th><td><span class="badge bg-${user.is_active ? 'success' : 'danger'}">${user.is_active ? 'Active' : 'Inactive'}</span></td></tr>
+                    <tr><th>Joined:</th><td>${new Date(user.created_at).toLocaleDateString()}</td></tr>
+                    <tr><th>Last Login:</th><td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td></tr>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('userModal')).show();
+}
+
+function editUser(userId) {
+    const user = usersData.find(u => u.user_id === userId);
+    if (!user) return;
+    
+    document.getElementById('edit_first_name').value = user.first_name || '';
+    document.getElementById('edit_last_name').value = user.last_name || '';
+    document.getElementById('edit_email').value = user.email;
+    document.getElementById('edit_phone').value = user.phone || '';
+    document.getElementById('edit_role').value = user.role;
+    
+    // Store user ID for save
+    document.getElementById('editUserForm').dataset.userId = userId;
+    
+    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+}
+
+function saveUserChanges() {
+    const userId = document.getElementById('editUserForm').dataset.userId;
+    alert(`Saving changes for user ${userId} (Demo - no actual changes made)`);
+    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+}
+
+function toggleUserStatus(userId, isActive) {
+    const action = isActive ? 'deactivate' : 'activate';
+    if (confirm(`Are you sure you want to ${action} this user?`)) {
+        window.location.href = `/admin/user/${userId}/toggle`;
+    }
+}
+
+function exportUserData() {
+    alert('Exporting user data as CSV...');
+}
+
+// Live search
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    const search = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(search) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

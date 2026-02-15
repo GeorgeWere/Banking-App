@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Pay Bills - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Pay Bills</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('pay_bills') }}">
+                        <div class="mb-3">
+                            <label for="account_id" class="form-label">From Account *</label>
+                            <select class="form-select" id="account_id" name="account_id" required>
+                                <option value="">Select account</option>
+                                {% for account in accounts %}
+                                    <option value="{{ account.account_id }}">
+                                        {{ account.account_type|title }} - {{ account.account_number }} 
+                                        (Balance: ${{ "%.2f"|format(account.balance) }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Biller *</label>
+                            <div class="row">
+                                {% for biller in billers %}
+                                <div class="col-md-3 col-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="biller" 
+                                               id="biller_{{ biller.id }}" value="{{ biller.name }}" required>
+                                        <label class="form-check-label" for="biller_{{ biller.id }}">
+                                            <i class="fas fa-{{ biller.icon }} me-1"></i>{{ biller.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="account_number" class="form-label">Account Number *</label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" 
+                                   placeholder="Enter your account number with the biller" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">Amount *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="due_date" class="form-label">Due Date (Optional)</label>
+                                <input type="date" class="form-control" id="due_date" name="due_date">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   placeholder="Additional notes">
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Please verify all bill details before submitting. Payments cannot be reversed.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg text-dark">
+                                <i class="fas fa-paper-plane me-2"></i>Pay Bill
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

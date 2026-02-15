@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Welcome back, {{ user.first_name or user.username }}! 👋</h2>
+            <p class="text-muted">Here's what's happening with your accounts today.</p>
+        </div>
+    </div>
+
+    <!-- Accounts Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4>Your Accounts</h4>
+        </div>
+        {% for account in accounts %}
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary">{{ account.account_type|title }}</span>
+                            <i class="fas fa-credit-card fa-2x text-muted"></i>
+                        </div>
+                        <h5 class="card-title">{{ account.account_number }}</h5>
+                        <h3 class="text-primary">${{ "%.2f"|format(account.balance) }}</h3>
+                        <p class="text-muted mb-0">Available: ${{ "%.2f"|format(account.available_balance) }}</p>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Opened: {{ account.opened_date }}</small>
+                            <small class="text-success">Active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col">
+                <div class="alert alert-info">
+                    You don't have any active accounts. Please contact support.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-3 mb-2">
+        <a href="{{ url_for('transfer') }}" class="btn btn-outline-primary w-100 py-3">
+            <i class="fas fa-exchange-alt fa-2x mb-2"></i><br>
+            Transfer Funds
+        </a>
+    </div>
+    <div class="col-md-3 mb-2">
+        <a href="{{ url_for('deposit') }}" class="btn btn-outline-success w-100 py-3">
+            <i class="fas fa-download fa-2x mb-2"></i><br>
+            Deposit
+        </a>
+    </div>
+    <div class="col-md-3 mb-2">
+        <a href="{{ url_for('pay_bills') }}" class="btn btn-outline-warning w-100 py-3">
+            <i class="fas fa-file-invoice fa-2x mb-2"></i><br>
+            Pay Bills
+        </a>
+    </div>
+    <div class="col-md-3 mb-2">
+        <a href="{{ url_for('statements') }}" class="btn btn-outline-info w-100 py-3">
+            <i class="fas fa-file-pdf fa-2x mb-2"></i><br>
+            Statements
+        </a>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Transactions</h5>
+                    <a href="{{ url_for('transactions') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for txn in transactions %}
+                                        <tr>
+                                            <td>{{ txn.initiated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ txn.description or txn.transaction_type|title }}</td>
+                                            <td>{{ txn.from_account_number or 'N/A' }}</td>
+                                            <td>{{ txn.to_account_number or 'N/A' }}</td>
+                                            <td class="{% if txn.from_account_id in accounts|map(attribute='account_id') %}text-danger{% else %}text-success{% endif %}">
+                                                ${{ "%.2f"|format(txn.amount) }}
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if txn.status == 'completed' %}bg-success{% elif txn.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ txn.status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No transactions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

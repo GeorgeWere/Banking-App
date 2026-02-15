@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}SecureBank - Modern Banking Solutions{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center min-vh-75 py-5">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <h1 class="display-3 fw-bold mb-4">Banking Made Simple, Secure, and Smart</h1>
+                <p class="lead mb-4">Experience the future of banking with SecureBank. Manage your finances, transfer money, and track your expenses all in one place.</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-user-plus me-2"></i>Open Account
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://via.placeholder.com/600x400?text=Banking+Illustration" alt="Banking" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose SecureBank?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; line-height: 80px;">
+                        <i class="fas fa-shield-alt fa-3x"></i>
+                    </div>
+                    <h4>Bank-Grade Security</h4>
+                    <p class="text-muted">Your money and data are protected with enterprise-level encryption and security measures.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; line-height: 80px;">
+                        <i class="fas fa-bolt fa-3x"></i>
+                    </div>
+                    <h4>Instant Transfers</h4>
+                    <p class="text-muted">Send money to any account instantly with real-time processing and immediate confirmation.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; line-height: 80px;">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                    </div>
+                    <h4>Smart Analytics</h4>
+                    <p class="text-muted">Track your spending patterns and get insights to help you manage your finances better.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3" style="width: 50px; height: 50px; line-height: 50px;">1</div>
+                    <h5>Create Account</h5>
+                    <p class="text-muted">Sign up with your basic information</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3" style="width: 50px; height: 50px; line-height: 50px;">2</div>
+                    <h5>Verify Identity</h5>
+                    <p class="text-muted">Secure verification process</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3" style="width: 50px; height: 50px; line-height: 50px;">3</div>
+                    <h5>Add Funds</h5>
+                    <p class="text-muted">Deposit money to your account</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3" style="width: 50px; height: 50px; line-height: 50px;">4</div>
+                    <h5>Start Banking</h5>
+                    <p class="text-muted">Transfer, save, and grow your money</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold text-primary">50K+</h2>
+                <p class="text-muted">Happy Customers</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold text-primary">$100M+</h2>
+                <p class="text-muted">Money Managed</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold text-primary">24/7</h2>
+                <p class="text-muted">Customer Support</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold text-primary">99.9%</h2>
+                <p class="text-muted">Uptime</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">What Our Customers Say</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="card-text">"SecureBank has transformed how I manage my finances. The interface is intuitive and transfers are instant!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                            <div>
+                                <h6 class="mb-0">John Doe</h6>
+                                <small class="text-muted">Customer since 2023</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="card-text">"The best banking app I've ever used. The security features give me peace of mind about my money."</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                            <div>
+                                <h6 class="mb-0">Jane Smith</h6>
+                                <small class="text-muted">Customer since 2024</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="card-text">"Excellent customer service and the best interest rates in town. Highly recommended!"</p>
+                        <div class="d-flex align-items-center mt-3">
+                            <img src="https://via.placeholder.com/50" class="rounded-circle me-3" alt="User">
+                            <div>
+                                <h6 class="mb-0">Mike Johnson</h6>
+                                <small class="text-muted">Customer since 2023</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section bg-primary text-white py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Get Started?</h2>
+        <p class="lead mb-4">Join thousands of satisfied customers who trust SecureBank for their financial needs.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-user-plus me-2"></i>Open Your Account Today
+        </a>
+    </div>
+</section>
+{% endblock %}

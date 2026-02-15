@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - SecureBank{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+            <p class="text-muted">Welcome back, {{ session.get('user_fullname') or session.get('username') }}! Here's what's happening in the bank.</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-history me-2"></i>View Logs
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-success">
+                    <i class="fas fa-users me-2"></i>Manage Users
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users or 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_users or 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Accounts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_accounts or 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Today's Transactions</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_transactions or 0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Balance Card -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">Total Bank Balance</h5>
+                            <h2 class="mb-0">${{ "%.2f"|format(total_balance or 0) }}</h2>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-university fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Users -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Users</h6>
+                    <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in recent_users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-primary text-white me-2" 
+                                                     style="width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%;">
+                                                    {{ user.first_name[0] if user.first_name else user.username[0] | upper }}
+                                                </div>
+                                                <div>
+                                                    {{ user.first_name }} {{ user.last_name }}<br>
+                                                    <small class="text-muted">@{{ user.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No users found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>User</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for txn in recent_transactions %}
+                                    <tr>
+                                        <td>{{ txn.initiated_at.strftime('%H:%M %m/%d') if txn.initiated_at else 'N/A' }}</td>
+                                        <td>{{ txn.username or 'System' }}</td>
+                                        <td class="{% if txn.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ${{ "%.2f"|format(txn.amount or 0) }}
+                                        </td>
+                                        <td>
+                                            {% if txn.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif txn.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif txn.status == 'failed' %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ txn.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No recent transactions</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section (Optional - requires Chart.js) -->
+    {% if daily_stats %}
+    <div class="row mt-4">
+        <div class="col-xl-12">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Daily Transaction Volume (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="transactionChart" style="height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if daily_stats %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Transaction volume chart
+    const ctx = document.getElementById('transactionChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for stat in daily_stats %}'{{ stat.date }}',{% endfor %}],
+            datasets: [{
+                label: 'Transaction Count',
+                data: [{% for stat in daily_stats %}{{ stat.count }},{% endfor %}],
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }, {
+                label: 'Transaction Volume ($)',
+                data: [{% for stat in daily_stats %}{{ stat.volume }},{% endfor %}],
+                borderColor: 'rgb(255, 99, 132)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Transaction Count'
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Volume ($)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}
