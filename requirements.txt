@@ -1,0 +1,14 @@
+Flask==2.3.3
+flask-mysqldb==1.0.1
+flask-bcrypt==1.0.1
+mysqlclient==2.2.0
+python-dotenv==1.0.0
+wtforms==3.0.1
+flask-wtf==1.1.1
+email-validator==2.0.0
+Pillow==10.0.0  # For image handling
+python-dateutil==2.8.2
+pytz==2023.3
+gunicorn==21.2.0  # For production
+redis==5.0.0  # For caching (optional)
+celery==5.3.1  # For background tasks (optional)
